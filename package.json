@@ -17,7 +17,8 @@
     "serve-favicon": "*",
     "sequelize": "*",
     "sqlite3": "*",
-    "mysql" : "*",
-    "mariasql" : "*",
+    "mysql": "*",
+    "mariasql": "*",
     "express-validator": "*"
+  }
 }
