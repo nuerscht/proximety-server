@@ -1,0 +1,23 @@
+{
+  "name": "proximety-server",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "body-parser": "*",
+    "cookie": "*",
+    "cookie-parser": "*",
+    "cookie-signature": "*",
+    "debug": "*",
+    "express": "*",
+    "jade": "*",
+    "morgan": "*",
+    "serve-favicon": "*",
+    "sequelize": "*",
+    "sqlite3": "*",
+    "mysql" : "*",
+    "mariasql" : "*",
+    "express-validator": "*"
+}

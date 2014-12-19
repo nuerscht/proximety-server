@@ -1,0 +1,8 @@
+{
+  "development" : {
+    "database" : "mysql://root:@localhost:3306/proximety"
+  },
+  "production" : {
+    "database" : ""
+  }
+}
