@@ -14,23 +14,28 @@ router.post('/signup', function(req, res) {
     req.checkBody('password_confirm', "Passwords don't match").equals(req.body.password);
 
     var errors = req.validationErrors();
-    if (errors) {
-        res.status(400).send(errors);
-    } else {
+    if (errors) res.status(400).send(errors);
+    else {
+        var name = req.body.name;
+        var email = req.body.email;
         var salt = util.sha1(crypto.pseudoRandomBytes(256));
         var password = util.sha1(salt + req.body.password);
 
-        models.User.findOrCreate(
-            { where: { email: req.body.email }, defaults: { name: req.body.name, salt: salt, password: password } })
-            .spread(function(user, created) {
-                if (created) {
-                    user.salt = undefined; // hide
-                    user.password = undefined; // hide
-                    res.send(user);
-                } else {
-                    res.status(400).send({ msg: "User with this email address already exists" });
-                }
-            });
+        models.User.findOne({ email: email }, function(err, user) {
+            if (err) res.status(500);
+            else if (user) res.status(400).send({ param: "email", msg: "User with this email address already exists", value: email });
+            else {
+                user = new models.User({
+                    name:       name,
+                    email:      email,
+                    salt:       salt,
+                    password:   password
+                });
+                user.save();
+
+                res.send(user);
+            }
+        });
     }
 });
 
@@ -39,24 +44,28 @@ router.post('/token', function(req, res) {
     req.checkBody('password', "Missing password").notEmpty();
 
     var errors = req.validationErrors();
-    if (errors) {
-        res.status(400).send(errors);
-    } else {
-        models.User.find({ where: { email: req.body.email }}).then(function(user) {
-            if (user) {
+    if (errors) res.status(400).send(errors);
+    else {
+        var email = req.body.email;
+
+        models.User.findOne({ email: email }, function(err, user) {
+            if (err) res.status(500);
+            else if (!user) res.status(400).send({ param: "email", msg: "User with this email address not found", value: email });
+            else {
                 var password = util.sha1(user.salt + req.body.password);
 
                 if (user.password === password) {
                     var tokenHash = util.sha1(crypto.pseudoRandomBytes(256));
-                    var token = models.Token.build({ hash: tokenHash });
-                    user.addToken(token).then(function(token) {
-                        res.send({ token: token.hash });
+                    var token = new models.Token({ hash: tokenHash, user: user });
+                    token.save(function(err) {
+                        if (err) res.status(500);
+                        else {
+                            res.send({ token: token.hash });
+                        }
                     });
                 } else {
                     res.status(400).send({ param: "password",  msg: "Invalid password", value: req.body.password });
                 }
-            } else {
-                res.status(400).send({ msg: "User with this email address not found"});
             }
         });
     }

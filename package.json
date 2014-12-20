@@ -15,10 +15,8 @@
     "jade": "*",
     "morgan": "*",
     "serve-favicon": "*",
-    "sequelize": "*",
-    "sqlite3": "*",
-    "mysql": "*",
-    "mariasql": "*",
+    "mongoose": "3.8.*",
+    "mongoose-id-validator": "0.1.5",
     "express-validator": "*"
   }
 }

@@ -1,6 +1,6 @@
 {
   "development" : {
-    "database" : "mysql://root:@localhost:3306/proximety"
+    "database" : "mongodb://localhost/proximety"
   },
   "production" : {
     "database" : ""
