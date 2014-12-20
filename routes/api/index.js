@@ -32,7 +32,7 @@ router.post('/signup', function(req, res) {
                     user.password = undefined; // hide
                     res.send(user);
                 } else {
-                    res.status(400).send("User already exists");
+                    res.status(400).send({ msg: "User with this email address already exists" });
                 }
             });
     }
@@ -57,10 +57,10 @@ router.post('/token', function(req, res) {
                         res.send({ token: token.hash });
                     });
                 } else {
-                    res.status(400).send("Invalid password");
+                    res.status(400).send({ param: "password",  msg: "Invalid password", value: req.body.password });
                 }
             } else {
-                res.status(400).send("User with this email address not found");
+                res.status(400).send({ msg: "User with this email address not found"});
             }
         });
     }
