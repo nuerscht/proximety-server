@@ -2,14 +2,10 @@
 
 var express = require('express');
 var crypto = require('crypto');
-var models  = require('../../models');
+var util = require('../../lib/util');
+var auth = require('../../lib/auth');
+var models  = require('../../lib/models');
 var router = express.Router();
-
-var sha1 = function(input) {
-    var shasum = crypto.createHash('sha1');
-    shasum.update(input);
-    return shasum.digest('hex');
-};
 
 router.post('/signup', function(req, res) {
     req.checkBody('name', "Invalid user name").notEmpty();
@@ -21,8 +17,8 @@ router.post('/signup', function(req, res) {
     if (errors) {
         res.status(400).send(errors);
     } else {
-        var salt = sha1(crypto.pseudoRandomBytes(256));
-        var password = sha1(salt + req.body.password);
+        var salt = util.sha1(crypto.pseudoRandomBytes(256));
+        var password = util.sha1(salt + req.body.password);
 
         models.User.findOrCreate(
             { where: { email: req.body.email }, defaults: { name: req.body.name, salt: salt, password: password } })
@@ -48,10 +44,10 @@ router.post('/token', function(req, res) {
     } else {
         models.User.find({ where: { email: req.body.email }}).then(function(user) {
             if (user) {
-                var password = sha1(user.salt + req.body.password);
+                var password = util.sha1(user.salt + req.body.password);
 
                 if (user.password === password) {
-                    var tokenHash = sha1(crypto.pseudoRandomBytes(256));
+                    var tokenHash = util.sha1(crypto.pseudoRandomBytes(256));
                     var token = models.Token.build({ hash: tokenHash });
                     user.addToken(token).then(function(token) {
                         res.send({ token: token.hash });

@@ -6,5 +6,5 @@
 - Run ```npm install```
 
 ## Startup
-- Configure the databse in ```config/config.json```
+- Configure the database in ```config/config.json```
 - Run ```npm start```
