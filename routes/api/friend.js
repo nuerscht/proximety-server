@@ -16,9 +16,12 @@ router.post('/', auth.token, function(req, res) {
     models.User.find({ where: { email: req.body.email } }).then(function(friend) {
         if (friend) {
             req.user.addFriend(friend);
-            friend.salt = undefined;
-            friend.password = undefined;
             res.send(friend);
+
+            //req.user.addFriend(friend);
+            //friend.salt = undefined;
+            //friend.password = undefined;
+
         } else {
             res.status(400).send({ param: "email", msg: "User with this email address not found", value: req.body.email });
         }
