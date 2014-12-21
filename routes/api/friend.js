@@ -9,7 +9,9 @@ var router = express.Router();
 router.get('/request', auth.token, function(req, res) {
     var user = req.user;
 
-    models.Request.find({ requestee: user._id }).populate('requester requestee').exec(function(err, requests) {
+    console.log(user);
+
+    models.Request.find({ requestee: user._id }, '_id requester').populate('requester', '_id name email latitude longitude').exec(function(err, requests) {
         if (err) res.status(500).end();
         else res.send(requests);
     });
@@ -19,7 +21,7 @@ router.get('/request', auth.token, function(req, res) {
 router.post('/request', auth.token, function(req, res) {
     req.checkBody('email', "Invalid email address").isEmail();
 
-    models.User.findOne({ email: req.body.email }, function(err, friend) {
+    models.User.findOne({ email: req.body.email }, '_id name email latitude longitude', function(err, friend) {
         if (err) res.status(500).end();
         else if (!friend) res.status(400).send({ param: "email", msg: "User with this email address not found", value: req.body.email });
         else {
@@ -42,28 +44,29 @@ router.put('/request', auth.token, function(req, res) {
     var requestId = req.body.request_id;
     var user = req.user;
 
-    models.Request.findOne({ _id: requestId, requestee: user._id }).populate('requester requestee').exec(function(err, request) {
-        if (err) res.status(500).end();
-        else if (!request) res.status(400).send({ param: "request_id", msg: "Request with this ID not found", value: requestId });
-        else {
-            var friend = request.requester;
+    models.Request.findOne({ _id: requestId, requestee: user._id }, '_id requester')
+        .populate('requester', '_id name email latitude longitude').exec(function(err, request) {
+            if (err) res.status(500).end();
+            else if (!request) res.status(400).send({ param: "request_id", msg: "Request with this ID not found", value: requestId });
+            else {
+                var friend = request.requester;
 
-            user.friends.addToSet(friend);
-            user.save();
+                user.friends.addToSet(friend);
+                user.save();
 
-            friend.friends.addToSet(user);
-            friend.save();
+                friend.friends.addToSet(user);
+                friend.save();
 
-            request.remove();
+                request.remove();
 
-            res.send(friend);
-        }
-    });
+                res.send(friend);
+            }
+        });
 });
 
 // Decline a friend request
 router.delete('/request', auth.token, function(req, res) {
-    var requestId = req.body.request_id;
+    var requestId = req.param('request_id');
     var user = req.user;
 
     models.Request.findOne({ _id: requestId, requestee: user._id }, function(err, request) {
@@ -81,7 +84,7 @@ router.delete('/request', auth.token, function(req, res) {
 router.get('/', auth.token, function(req, res) {
     var friendIds = req.user.friends;
     if (friendIds && friendIds.length) {
-        models.User.find({ _id: friendIds }, function(err, friends) {
+        models.User.find({ _id: friendIds }, '_id name email latitude longitude', function(err, friends) {
             if (err) res.status(500).end();
             else res.send(friends || []);
         });
@@ -90,9 +93,19 @@ router.get('/', auth.token, function(req, res) {
     }
 });
 
+// Get details of a friend
+router.get('/:id', auth.token, function(req, res) {
+    var friendId = req.params.id;
+
+    models.User.find({ _id: friendId }, '_id name email latitude longitude').exec(function(err, friend) {
+        if (err) res.status(500).end();
+        else res.send(friend);
+    });
+});
+
 // Remove a friend from my friendlist
 router.delete('/', auth.token, function(req, res) {
-    var friendId = req.body.friend_id;
+    var friendId = req.param('friend_id');
     var user = req.user;
 
     models.User.findOne({ _id: friendId }, function(err, friend) {

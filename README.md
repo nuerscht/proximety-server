@@ -20,10 +20,12 @@ curl -X POST --data '{"name":"Andy Villiger","email":"a.villiger@gmail.com","pas
 Response:
 ```json
 {
-    "_id":      "5495d31a9c62d66a99ae21c3",
-    "name":     "Andy Villiger",
-    "email":    "a.villiger@gmail.com",
-    "friends":  [ "5495d31a9c62d66a99ae21c3" ]
+    "_id":          "5495d31a9c62d66a99ae21c3",
+    "name":         "Andy Villiger",
+    "email":        "a.villiger@gmail.com",
+    "latitude":     null,
+    "longitude":    null,
+    "friends":      []
 }
 ```
 
@@ -36,7 +38,7 @@ curl -X POST --data '{"email":"a.villiger@gmail.com","password":"1234"}' -H "Con
 Response:
 ```json
 {
-    "token":    "8e13b2cdbd83eaf49d81685cc6744bece982bdf0"
+    "token": "8e13b2cdbd83eaf49d81685cc6744bece982bdf0"
 }
 ```
 
@@ -50,14 +52,18 @@ Response:
 ```json
 [
     {
-        "_id":      "5495d31a9c62d66a99ae21c3",
-        "name":     "Andy Villiger",
-        "email":    "a.villiger@gmail.com"
+        "_id":          "5495d31a9c62d66a99ae21c3",
+        "name":         "Andy Villiger",
+        "email":        "a.villiger@gmail.com",
+        "latitude":     2381737.1231,
+        "longitude":    2123002.2134
     },
     {
-        "_id":      "5495d31a9c62d66a99ae21c4",
-        "name":     "Max Mustermann",
-        "email":    "max@gmail.com"
+        "_id":          "5495d31a9c62d66a99ae21c4",
+        "name":         "Max Mustermann",
+        "email":        "max@gmail.com",
+        "latitude":     2381737.1231,
+        "longitude":    2123002.2134
     }
 ]
 ```
@@ -71,9 +77,14 @@ curl -X POST --data '{"email":"max@gmail.com","token":"8e13b2cdbd83eaf49d81685cc
 Response:
 ```json
 {
-    "requester": "5495d31a9c62d66a99ae21c3",
-    "requestee": "5495d31a9c62d66a99ae21c3",
-    "_id": "5496cb57c8acd51b04deb001"
+    "_id": "5496cb57c8acd51b04deb001",
+    "requester": {
+         "_id":          "5495d31a9c62d66a99ae21c3",
+         "name":         "Andy Villiger",
+         "email":        "a.villiger@gmail.com",
+         "latitude":     2381737.1231,
+         "longitude":    2123002.2134
+     }
 }
 ```
 
@@ -86,22 +97,24 @@ curl -X PUT --data '{"request_id":"5496cb57c8acd51b04deb001","token":"8e13b2cdbd
 Response:
 ```json
 {
-    "_id":      "5495d31a9c62d66a99ae21c3",
-    "name":     "Andy Villiger",
-    "email":    "a.villiger@gmail.com"
+    "_id":          "5495d31a9c62d66a99ae21c3",
+    "name":         "Andy Villiger",
+    "email":        "a.villiger@gmail.com",
+    "latitude":     2381737.1231,
+    "longitude":    2123002.2134
 }
 ```
 
 ### Decline a friend request
 Request:
 ```bash
-curl -X DELETE --data '{"request_id":"5496cb57c8acd51b04deb001","token":"8e13b2cdbd83eaf49d81685cc6744bece982bdf0"}' -H "Content-Type: application/json" "127.0.0.1:3000/api/friend/request"
+curl -X DELETE "request_id":"5496cb57c8acd51b04deb001","token":"8e13b2cdbd83eaf49d81685cc6744bece982bdf0"-H "Content-Type: application/json" "127.0.0.1:3000/api/friend/request?request_id=5496cb57c8acd51b04deb001&token=8e13b2cdbd83eaf49d81685cc6744bece982bdf0"
 ```
 
 Response:
 ```json
 {
-    "msg":      "Declined request"
+    "msg": "Declined request"
 }
 ```
 
@@ -115,27 +128,61 @@ Response:
 ```json
 [
     {
-        "_id":      "5495d31a9c62d66a99ae21c3",
-        "name":     "Andy Villiger",
-        "email":    "a.villiger@gmail.com"
+        "_id":          "5495d31a9c62d66a99ae21c3",
+        "name":         "Andy Villiger",
+        "email":        "a.villiger@gmail.com",
+        "latitude":     2381737.1231,
+        "longitude":    2123002.2134
     },
     {
-        "_id":      "5495d31a9c62d66a99ae21c4",
-        "name":     "Max Mustermann",
-        "email":    "max@gmail.com"
+        "_id":          "5495d31a9c62d66a99ae21c4",
+        "name":         "Max Mustermann",
+        "email":        "max@gmail.com",
+        "latitude":     2381737.1231,
+        "longitude":    2123002.2134
     }
 ]
 ```
 
-### Remove a friend from your friendlist
+### Get the details of a friend
 Request:
 ```bash
-curl -X DELETE --data '{"friend_id":"5495d31a9c62d66a99ae21c3","token":"8e13b2cdbd83eaf49d81685cc6744bece982bdf0"}' -H "Content-Type: application/json" "127.0.0.1:3000/api/friend"
+curl -X GET "127.0.0.1:3000/api/friend/5495d31a9c62d66a99ae21c3?token=8e13b2cdbd83eaf49d81685cc6744bece982bdf0"
 ```
 
 Response:
 ```json
 {
-    "msg":      "Friend removed"
+    "_id":          "5495d31a9c62d66a99ae21c3",
+    "name":         "Andy Villiger",
+    "email":        "a.villiger@gmail.com",
+    "latitude":     2381737.1231,
+    "longitude":    2123002.2134
+}
+```
+
+### Remove a friend from your friendlist
+Request:
+```bash
+curl -X DELETE -H "Content-Type: application/json" "127.0.0.1:3000/api/friend?friend_id=5495d31a9c62d66a99ae21c3&token=8e13b2cdbd83eaf49d81685cc6744bece982bdf0"
+```
+
+Response:
+```json
+{
+    "msg": "Friend removed"
+}
+```
+
+### Update your location
+Request:
+```bash
+curl -X POST --data '{"latitude":2382937.1231,"longitude":2123002.2134,"token":"8e13b2cdbd83eaf49d81685cc6744bece982bdf0"}' -H "Content-Type: application/json" "127.0.0.1:3000/api/location"
+```
+
+Response:
+```json
+{
+    "msg": "Position updated"
 }
 ```
