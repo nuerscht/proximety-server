@@ -22,7 +22,7 @@ router.post('/signup', function(req, res) {
         var password = util.sha1(salt + req.body.password);
 
         models.User.findOne({ email: email }, function(err, user) {
-            if (err) res.status(500);
+            if (err) res.status(500).end();
             else if (user) res.status(400).send({ param: "email", msg: "User with this email address already exists", value: email });
             else {
                 user = new models.User({
@@ -49,7 +49,7 @@ router.post('/token', function(req, res) {
         var email = req.body.email;
 
         models.User.findOne({ email: email }, function(err, user) {
-            if (err) res.status(500);
+            if (err) res.status(500).end();
             else if (!user) res.status(400).send({ param: "email", msg: "User with this email address not found", value: email });
             else {
                 var password = util.sha1(user.salt + req.body.password);
@@ -58,7 +58,7 @@ router.post('/token', function(req, res) {
                     var tokenHash = util.sha1(crypto.pseudoRandomBytes(256));
                     var token = new models.Token({ hash: tokenHash, user: user });
                     token.save(function(err) {
-                        if (err) res.status(500);
+                        if (err) res.status(500).end();
                         else {
                             res.send({ token: token.hash });
                         }
