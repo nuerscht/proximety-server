@@ -9,8 +9,6 @@ var router = express.Router();
 router.get('/request', auth.token, function(req, res) {
     var user = req.user;
 
-    console.log(user);
-
     models.Request.find({ requestee: user._id }, '_id requester').populate('requester', '_id name email latitude longitude').exec(function(err, requests) {
         if (err) res.status(500).end();
         else res.send(requests);

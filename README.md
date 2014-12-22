@@ -186,3 +186,16 @@ Response:
     "msg": "Position updated"
 }
 ```
+
+### Add a new ClientID
+Request:
+```bash
+curl -X POST --data '{"id":"sakdzw892eh2...","token":"8e13b2cdbd83eaf49d81685cc6744bece982bdf0"}' -H "Content-Type: application/json" "127.0.0.1:3000/api/user/client-id"
+```
+
+Response:
+```json
+{
+    "msg": "ClientID added"
+}
+```
