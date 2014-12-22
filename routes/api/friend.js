@@ -1,5 +1,6 @@
 "use strict";
 
+var _ = require('underscore');
 var express = require('express');
 var models  = require('../../lib/models');
 var auth = require('../../lib/auth');
@@ -43,7 +44,7 @@ router.put('/request', auth.token, function(req, res) {
     var user = req.user;
 
     models.Request.findOne({ _id: requestId, requestee: user._id }, '_id requester')
-        .populate('requester', '_id name email latitude longitude').exec(function(err, request) {
+        .populate('requester', '_id name email latitude longitude friends').exec(function(err, request) {
             if (err) res.status(500).end();
             else if (!request) res.status(400).send({ param: "request_id", msg: "Request with this ID not found", value: requestId });
             else {
@@ -57,7 +58,7 @@ router.put('/request', auth.token, function(req, res) {
 
                 request.remove();
 
-                res.send(friend);
+                res.send(_.omit(friend, 'friends'));
             }
         });
 });
