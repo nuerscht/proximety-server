@@ -7,8 +7,8 @@ var router = express.Router();
 
 // Push location
 router.post('/', auth.token, function(req, res) {
-    req.checkBody('latitude', "Missing latitude").isNumber();
-    req.checkBody('longitude', "Missing longitude").isNumber();
+    req.checkBody('latitude', "Param latitude must be a decimal number").isFloat();
+    req.checkBody('longitude', "Param longitude must be a decimal number").isFloat();
 
     var errors = req.validationErrors();
     if (errors) res.status(400).send(errors);
