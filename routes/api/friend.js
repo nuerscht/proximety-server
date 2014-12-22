@@ -50,10 +50,10 @@ router.put('/request', auth.token, function(req, res) {
             else {
                 var friend = request.requester;
 
-                user.friends.addToSet(friend);
+                user.friends.addToSet({ user: friend });
                 user.save();
 
-                friend.friends.addToSet(user);
+                friend.friends.addToSet({ user: user });
                 friend.save();
 
                 request.remove();
@@ -100,6 +100,38 @@ router.get('/:id', auth.token, function(req, res) {
         if (err) res.status(500).end();
         else res.send(friend);
     });
+});
+
+// Update the alarm settings
+router.put('/:id/alarm', auth.token, function(req, res) {
+    req.checkBody('active', "Param active must be either 0 or 1").optional().isIn(["0", "1"]);
+    req.checkBody('distance', "Param distance must be a number").optional().isInt();
+
+    var errors = req.validationErrors();
+    if (errors) res.status(400).send(errors);
+    else {
+        var friendId = req.param.id;
+        var user = req.user;
+        var active = req.body.active;
+        var distance = req.body.distance;
+
+        if (!user.friends) res.status(500).end();
+        else {
+            for (var i = 0; i < user.friends.length; i++) {
+                if (user.friends[i].user.id == friendId) {
+                    user.friends[i].alarm.active = active || user.friends[i].alarm.active;
+                    user.friends[i].alarm.distance = distance || user.friends[i].alarm.distance;
+                    user.save();
+
+                    res.send({ msg: "Alarm settings updated" });
+                    return;
+                }
+            }
+
+            // if we arrived here, we haven't found a friend
+            res.status(400).send({ param: "id", msg: "Friend with this id not found", value: friendId });
+        }
+    }
 });
 
 // Remove a friend from my friendlist

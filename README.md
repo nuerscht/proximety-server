@@ -161,6 +161,19 @@ Response:
 }
 ```
 
+### Update alarm settings for a friend
+Request:
+```bash
+curl -X PUT "127.0.0.1:3000/api/friend/5495d31a9c62d66a99ae21c3/alarm?active=1&token=8e13b2cdbd83eaf49d81685cc6744bece982bdf0"
+```
+
+Response:
+```json
+{
+    "msg": "Alarm settings updated"
+}
+```
+
 ### Remove a friend from your friendlist
 Request:
 ```bash
