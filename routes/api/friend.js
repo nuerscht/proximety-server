@@ -44,21 +44,23 @@ router.put('/request', auth.token, function(req, res) {
     var user = req.user;
 
     models.Request.findOne({ _id: requestId, requestee: user._id }, '_id requester')
-        .populate('requester', '_id name email latitude longitude friends').exec(function(err, request) {
+        .populate('requester', '_id name email latitude longitude friends alarm').exec(function(err, request) {
             if (err) res.status(500).end();
             else if (!request) res.status(400).send({ param: "request_id", msg: "Request with this ID not found", value: requestId });
             else {
                 var friend = request.requester;
 
-                user.friends.addToSet({ user: friend });
+                user.friends.addToSet(friend);
+                user.alarm.addToSet(friend);
                 user.save();
 
-                friend.friends.addToSet({ user: user });
+                friend.friends.addToSet(user);
+                friend.alarm.addToSet(user);
                 friend.save();
 
                 request.remove();
 
-                res.send(_.omit(friend, 'friends'));
+                res.send(_.omit(friend.toJSON(), 'friends', 'alarm'));
             }
         });
 });
@@ -103,33 +105,34 @@ router.get('/:id', auth.token, function(req, res) {
 });
 
 // Update the alarm settings
+router.get('/:id/alarm', auth.token, function(req, res) {
+    var friendId = req.params.id;
+    var user = req.user;
+    var active = user.alarm.indexOf(friendId) < 0 ? 0 : 1;
+
+    res.send({ active: active });
+});
+
+// Update the alarm settings
 router.put('/:id/alarm', auth.token, function(req, res) {
     req.checkBody('active', "Param active must be either 0 or 1").optional().isIn(["0", "1"]);
-    req.checkBody('distance', "Param distance must be a number").optional().isInt();
 
     var errors = req.validationErrors();
     if (errors) res.status(400).send(errors);
     else {
-        var friendId = req.param.id;
+        var friendId = req.params.id;
         var user = req.user;
-        var active = req.body.active;
-        var distance = req.body.distance;
+        var active = req.body.active == 1;
 
-        if (!user.friends) res.status(500).end();
+        if (user.friends.indexOf(friendId) < 0) res.status(400).send({ param: 'id', msg: "Friend with this id not found", value: friendId });
         else {
-            for (var i = 0; i < user.friends.length; i++) {
-                if (user.friends[i].user.id == friendId) {
-                    user.friends[i].alarm.active = active || user.friends[i].alarm.active;
-                    user.friends[i].alarm.distance = distance || user.friends[i].alarm.distance;
-                    user.save();
-
-                    res.send({ msg: "Alarm settings updated" });
-                    return;
-                }
+            if (active) {
+                user.alarm.pull(friendId);
+            } else {
+                user.alarm.addToSet(friendId);
             }
 
-            // if we arrived here, we haven't found a friend
-            res.status(400).send({ param: "id", msg: "Friend with this id not found", value: friendId });
+            res.send({ active: active });
         }
     }
 });
@@ -144,9 +147,11 @@ router.delete('/', auth.token, function(req, res) {
         else if (!friend) res.status(400).send({ param: "request_id", msg: "Request with this ID not found", value: requestId });
         else {
             user.friends.pull(friend);
+            user.alarm.pull(friend);
             user.save();
 
             friend.friends.pull(user);
+            friend.alarm.pull(user);
             friend.save();
 
             res.send({ msg: "Friend removed" });

@@ -31,7 +31,9 @@ router.post('/signup', function(req, res) {
                     salt:       salt,
                     password:   password
                 });
-                user.save();
+                user.save(function(err) {
+                    console.log("hello: " + err);
+                });
 
                 res.send(user);
             }
