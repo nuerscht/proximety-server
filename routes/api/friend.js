@@ -85,7 +85,7 @@ router.delete('/request', auth.token, function(req, res) {
 router.get('/', auth.token, function(req, res) {
     var friendIds = req.user.friends;
     if (friendIds && friendIds.length) {
-        models.User.find({ _id: friendIds }, '_id name email latitude longitude', function(err, friends) {
+        models.User.find({ _id: { $in: friendIds } }, '_id name email latitude longitude', function(err, friends) {
             if (err) res.status(500).end();
             else res.send(friends || []);
         });
