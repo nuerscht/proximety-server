@@ -68,6 +68,7 @@ router.post('/', auth.token, function(req, res) {
                         sendGCM({
                             registration_ids: user.clientIDs.toJSON(),
                             data: {
+                                type: "alert",
                                 name: friend.name,
                                 email: friend.email,
                                 latitude: friend.latitude,
@@ -81,6 +82,7 @@ router.post('/', auth.token, function(req, res) {
                         sendGCM({
                             registration_ids: friend.clientIDs.toJSON(),
                             data: {
+                                type: "alert",
                                 name: user.name,
                                 email: user.email,
                                 latitude: user.latitude,
