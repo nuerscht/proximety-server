@@ -1,8 +1,10 @@
 {
   "development" : {
-    "database" : "mongodb://localhost/proximety"
+    "database" : "mongodb://localhost/proximety",
+    "google_apikey" : ""
   },
   "production" : {
-    "database" : ""
+    "database" : "",
+    "google_apikey" : ""
   }
 }
