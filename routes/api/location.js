@@ -43,7 +43,7 @@ router.post('/', auth.token, function(req, res) {
                     if (lastDistance > 5) {
                         // send GCM to user
                         util.sendGCM({
-                            registration_ids: user.clientIDs.toJSON(),
+                            registration_ids: user.clientIDs,
                             data: {
                                 type: "alert",
                                 _id: friend._id,
@@ -58,7 +58,7 @@ router.post('/', auth.token, function(req, res) {
 
                         // send GCM to friend
                         util.sendGCM({
-                            registration_ids: friend.clientIDs.toJSON(),
+                            registration_ids: friend.clientIDs,
                             data: {
                                 type: "alert",
                                 _id: user._id,
