@@ -31,50 +31,62 @@ router.post('/', auth.token, function(req, res) {
         user.longitude = longitude;
         user.save();
 
-        for (var i = 0; i < user.friends.length; i++) {
-            var friend = user.friends[i];
+        models.User.find({ _id: { $in: user.friends } }, '_id name email latitude longitude clientIDs', function(err, friends) {
+            if (!err) {
+                for (var i = 0; i < friends.length; i++) {
+                    var friend = friends[i];
+                    console.log(friend.name);
 
-            var distance = util.distanceInKm(latitude, longitude, friend.latitude, friend.longitude);
-            if (distance <= 5) {
-                var lastPos = _.last(user.history.toJSON());
-                if (lastPos) {
-                    var lastDistance = util.distanceInKm(lastPos.latitude, lastPos.longitude, friend.latitude, friend.longitude);
+                    var distance = util.distanceInKm(latitude, longitude, friend.latitude, friend.longitude);
+                    console.log(distance);
+                    if (distance <= 5) {
+                        if (user.history && user.history.length > 0) {
+                            var lastPos = user.history[user.history.length - 1];
+                            console.log(lastPos);
+                            var lastDistance = util.distanceInKm(lastPos.latitude, lastPos.longitude, friend.latitude, friend.longitude);
+                            console.log(lastDistance);
 
-                    if (lastDistance > 5) {
-                        // send GCM to user
-                        util.sendGCM({
-                            registration_ids: user.clientIDs,
-                            data: {
-                                type: "alert",
-                                _id: friend._id,
-                                name: friend.name,
-                                email: friend.email,
-                                latitude: friend.latitude,
-                                longitude: friend.longitude
+                            if (lastDistance > 5) {
+                                // send GCM to user
+                                if (user.clientIDs.length > 0) {
+                                    util.sendGCM({
+                                        registration_ids: user.clientIDs,
+                                        data: {
+                                            type: "alert",
+                                            _id: friend._id,
+                                            name: friend.name,
+                                            email: friend.email,
+                                            latitude: friend.latitude,
+                                            longitude: friend.longitude
+                                        }
+                                    }, function(err) {
+                                        if (err) console.log("GCM", err);
+                                    });
+                                }
+
+                                // send GCM to friend
+                                if (friend.clientIDs.length > 0) {
+                                    util.sendGCM({
+                                        registration_ids: friend.clientIDs,
+                                        data: {
+                                            type: "alert",
+                                            _id: user._id,
+                                            name: user.name,
+                                            email: user.email,
+                                            latitude: user.latitude,
+                                            longitude: user.longitude
+                                        }
+                                    }, function(err) {
+                                        if (err) console.log("GCM", err);
+                                    });
+                                }
                             }
-                        }, function(err) {
-                            console.log("GCM", err);
-                        });
+                        }
 
-                        // send GCM to friend
-                        util.sendGCM({
-                            registration_ids: friend.clientIDs,
-                            data: {
-                                type: "alert",
-                                _id: user._id,
-                                name: user.name,
-                                email: user.email,
-                                latitude: user.latitude,
-                                longitude: user.longitude
-                            }
-                        }, function(err) {
-                            console.log("GCM", err);
-                        });
                     }
                 }
-
             }
-        }
+        });
 
         res.send({ msg: "Position updated"});
     }
