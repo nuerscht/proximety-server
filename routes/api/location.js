@@ -1,5 +1,9 @@
 "use strict";
 
+/**
+ * @author avi
+ */
+
 var _ = require('underscore');
 var express = require('express');
 var https = require('https');
@@ -69,6 +73,7 @@ router.post('/', auth.token, function(req, res) {
                             registration_ids: user.clientIDs.toJSON(),
                             data: {
                                 type: "alert",
+                                _id: friend._id,
                                 name: friend.name,
                                 email: friend.email,
                                 latitude: friend.latitude,
@@ -83,6 +88,7 @@ router.post('/', auth.token, function(req, res) {
                             registration_ids: friend.clientIDs.toJSON(),
                             data: {
                                 type: "alert",
+                                _id: user._id,
                                 name: user.name,
                                 email: user.email,
                                 latitude: user.latitude,
