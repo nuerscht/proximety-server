@@ -38,9 +38,11 @@ router.post('/request', auth.token, function(req, res) {
 
             request.save();
 
+            console.log(friend);
+
             // send GCM to friend
             util.sendGCM({
-                registration_ids: friend.clientIDs.toJSON(),
+                registration_ids: friend.clientIDs,
                 data: {
                     type: "friend_request",
                     name: friend.name

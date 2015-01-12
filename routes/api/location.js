@@ -6,7 +6,6 @@
 
 var _ = require('underscore');
 var express = require('express');
-var https = require('https');
 var models  = require('../../lib/models');
 var auth = require('../../lib/auth');
 var util = require('../../lib/util');
