@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * @author avi
+ * @author Andy Villiger
  */
 
 var express = require('express');
