@@ -36,10 +36,11 @@ router.post('/signup', function(req, res) {
                     password:   password
                 });
                 user.save(function(err) {
-                    console.log("hello: " + err);
+                    if (err) res.status(500).end();
+                    else {
+                        res.send(user);
+                    }
                 });
-
-                res.send(user);
             }
         });
     }

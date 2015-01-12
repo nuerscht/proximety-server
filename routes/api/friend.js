@@ -8,6 +8,7 @@ var _ = require('underscore');
 var express = require('express');
 var models  = require('../../lib/models');
 var auth = require('../../lib/auth');
+var util = require('../../lib/util');
 var router = express.Router();
 
 // Get all pending friend requests
@@ -24,7 +25,7 @@ router.get('/request', auth.token, function(req, res) {
 router.post('/request', auth.token, function(req, res) {
     req.checkBody('email', "Invalid email address").isEmail();
 
-    models.User.findOne({ email: req.body.email }, '_id name email latitude longitude', function(err, friend) {
+    models.User.findOne({ email: req.body.email }, '_id name email latitude longitude clientIDs', function(err, friend) {
         if (err) res.status(500).end();
         else if (!friend) res.status(400).send({ param: "email", msg: "User with this email address not found", value: req.body.email });
         else {
@@ -36,6 +37,17 @@ router.post('/request', auth.token, function(req, res) {
             });
 
             request.save();
+
+            // send GCM to friend
+            util.sendGCM({
+                registration_ids: friend.clientIDs.toJSON(),
+                data: {
+                    type: "friend_request",
+                    name: friend.name
+                }
+            }, function(err) {
+                console.log("GCM", err);
+            });
 
             res.send(request);
         }

@@ -10,33 +10,7 @@ var https = require('https');
 var models  = require('../../lib/models');
 var auth = require('../../lib/auth');
 var util = require('../../lib/util');
-var env = process.env.NODE_ENV || "development";
-var config = require(__dirname + '/../../config/config.json')[env];
 var router = express.Router();
-
-var sendGCM = function(data, callback) {
-    var options = {
-        host: 'android.googleapis.com',
-        port: 443,
-        path: '/gcm/send',
-        method: 'POST',
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "key=" + config.google_apikey
-        }
-    };
-
-    var req = https.request(options, function(res) {
-        res.on('data', function(d) {
-            callback(null);
-        });
-    });
-    req.end(JSON.stringify(data));
-
-    req.on('error', function(e) {
-        callback(e);
-    });
-};
 
 // Push location
 router.post('/', auth.token, function(req, res) {
@@ -69,7 +43,7 @@ router.post('/', auth.token, function(req, res) {
 
                     if (lastDistance > 5) {
                         // send GCM to user
-                        sendGCM({
+                        util.sendGCM({
                             registration_ids: user.clientIDs.toJSON(),
                             data: {
                                 type: "alert",
@@ -84,7 +58,7 @@ router.post('/', auth.token, function(req, res) {
                         });
 
                         // send GCM to friend
-                        sendGCM({
+                        util.sendGCM({
                             registration_ids: friend.clientIDs.toJSON(),
                             data: {
                                 type: "alert",
