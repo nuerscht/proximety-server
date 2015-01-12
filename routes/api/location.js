@@ -35,16 +35,12 @@ router.post('/', auth.token, function(req, res) {
             if (!err) {
                 for (var i = 0; i < friends.length; i++) {
                     var friend = friends[i];
-                    console.log(friend.name);
 
                     var distance = util.distanceInKm(latitude, longitude, friend.latitude, friend.longitude);
-                    console.log(distance);
                     if (distance <= 5) {
                         if (user.history && user.history.length > 0) {
                             var lastPos = user.history[user.history.length - 1];
-                            console.log(lastPos);
                             var lastDistance = util.distanceInKm(lastPos.latitude, lastPos.longitude, friend.latitude, friend.longitude);
-                            console.log(lastDistance);
 
                             if (lastDistance > 5) {
                                 // send GCM to user
