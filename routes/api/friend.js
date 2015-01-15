@@ -30,7 +30,7 @@ router.post('/request', auth.token, function(req, res) {
 
         if (err) res.status(500).end();
         else if (!friend) res.status(400).send({ param: "email", msg: "User with this email address not found", value: req.body.email });
-        else if (friend && friend._id == user._id)  res.status(400).send({ msg: "You can't add yourself as a friend" });
+        else if (friend && friend._id == user._id) res.status(400).send({ msg: "You can't add yourself as a friend" });
         else {
             var request = new models.Request({
                 requester: user,
@@ -38,8 +38,6 @@ router.post('/request', auth.token, function(req, res) {
             });
 
             request.save();
-
-            console.log(friend);
 
             // send GCM to friend
             if (friend.clientIDs.length > 0) {

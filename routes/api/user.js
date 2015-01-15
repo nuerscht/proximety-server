@@ -26,4 +26,21 @@ router.post('/client-id', auth.token, function(req, res) {
     }
 });
 
+// Remove an Android ClientID
+router.delete('/client-id', auth.token, function(req, res) {
+    req.checkBody('id', "Missing ClientID").notEmpty();
+
+    var errors = req.validationErrors();
+    if (errors) res.status(400).send(errors);
+    else {
+        var user = req.user;
+        var clientID = req.body.id;
+
+        user.clientIDs.pull(clientID);
+        user.save();
+
+        res.send({ msg: "ClientID removed"});
+    }
+});
+
 module.exports = router;
