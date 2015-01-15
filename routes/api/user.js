@@ -28,7 +28,7 @@ router.post('/client-id', auth.token, function(req, res) {
 
 // Remove an Android ClientID
 router.delete('/client-id', auth.token, function(req, res) {
-    req.checkParams('id', "Missing ClientID").notEmpty();
+    req.assert('id', "Missing ClientID").notEmpty();
 
     var errors = req.validationErrors();
     if (errors) res.status(400).send(errors);
