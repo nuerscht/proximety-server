@@ -26,11 +26,12 @@ router.post('/request', auth.token, function(req, res) {
     req.checkBody('email', "Invalid email address").isEmail();
 
     models.User.findOne({ email: req.body.email }, '_id name email latitude longitude clientIDs', function(err, friend) {
+        var user = req.user;
+
         if (err) res.status(500).end();
         else if (!friend) res.status(400).send({ param: "email", msg: "User with this email address not found", value: req.body.email });
+        else if (friend && friend._id == user._id)  res.status(400).send({ msg: "You can't add yourself as a friend" });
         else {
-            var user = req.user;
-
             var request = new models.Request({
                 requester: user,
                 requestee: friend
