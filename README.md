@@ -228,7 +228,7 @@ Response:
 ### Remove an Android ClientID
 Request:
 ```bash
-curl -X DELETE --data '{"id":"sakdzw892eh2...","token":"8e13b2cdbd83eaf49d81685cc6744bece982bdf0"}' -H "Content-Type: application/json" "127.0.0.1:3000/api/user/client-id"
+curl -X DELETE "127.0.0.1:3000/api/user/client-id?id=sakdzw892eh2...&token=8e13b2cdbd83eaf49d81685cc6744bece982bdf0"
 ```
 
 Response:
