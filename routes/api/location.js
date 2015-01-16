@@ -31,60 +31,63 @@ router.post('/', auth.token, function(req, res) {
         user.longitude = longitude;
         user.save();
 
-        models.User.find({ _id: { $in: _.pluck(user.friends.toObject(), 'user') } },
-            '_id name email latitude longitude clientIDs alarm',
-            function(err, friends) {
-            if (!err) {
-                for (var i = 0; i < friends.length; i++) {
-                    var friend = friends[i];
+        for (var i = 0; i < user.friends.length; i++) {
+            var connectionToFriend = user.friends[i];
 
+            models.User.findOne({ _id: connectionToFriend.user, 'friends.user': user._id }).exec(function(err, friend) {
+                if (!err && friend != null) {
+                    var lastPos = user.history[user.history.length - 1];
                     var distance = util.distanceInKm(latitude, longitude, friend.latitude, friend.longitude);
-                    if (distance <= 5) {
-                        if (user.history && user.history.length > 0) {
-                            var lastPos = user.history[user.history.length - 1];
-                            var lastDistance = util.distanceInKm(lastPos.latitude, lastPos.longitude, friend.latitude, friend.longitude);
+                    var lastDistance = util.distanceInKm(lastPos.latitude, lastPos.longitude, friend.latitude, friend.longitude);
 
-                            if (lastDistance > 5) {
-                                // send GCM to user
-                                if (user.clientIDs.length > 0) {
-                                    util.sendGCM({
-                                        registration_ids: user.clientIDs,
-                                        data: {
-                                            type: "alert",
-                                            _id: friend._id,
-                                            name: friend.name,
-                                            email: friend.email,
-                                            latitude: friend.latitude,
-                                            longitude: friend.longitude
-                                        }
-                                    }, function(err) {
-                                        if (err) console.log("GCM", err);
-                                    });
-                                }
+                    if (connectionToFriend.active &&
+                        distance <= connectionToFriend.distance &&
+                        lastDistance > connectionToFriend.distance) {
 
-                                // send GCM to friend
-                                if (friend.clientIDs.length > 0) {
-                                    util.sendGCM({
-                                        registration_ids: friend.clientIDs,
-                                        data: {
-                                            type: "alert",
-                                            _id: user._id,
-                                            name: user.name,
-                                            email: user.email,
-                                            latitude: user.latitude,
-                                            longitude: user.longitude
-                                        }
-                                    }, function(err) {
-                                        if (err) console.log("GCM", err);
-                                    });
+                        // send GCM to user
+                        if (user.clientIDs.length > 0) {
+                            util.sendGCM({
+                                registration_ids: user.clientIDs,
+                                data: {
+                                    type: "alert",
+                                    _id: friend._id,
+                                    name: friend.name,
+                                    email: friend.email,
+                                    latitude: friend.latitude,
+                                    longitude: friend.longitude
                                 }
-                            }
+                            }, function(err) {
+                                if (err) console.log("GCM", err);
+                            });
                         }
+                    }
 
+                    var connectionFromFriend = friend.friends[0];
+
+                    if (connectionFromFriend.active &&
+                        distance <= connectionFromFriend.distance &&
+                        lastDistance > connectionFromFriend.distance) {
+
+                        // send GCM to friend
+                        if (friend.clientIDs.length > 0) {
+                            util.sendGCM({
+                                registration_ids: friend.clientIDs,
+                                data: {
+                                    type: "alert",
+                                    _id: user._id,
+                                    name: user.name,
+                                    email: user.email,
+                                    latitude: user.latitude,
+                                    longitude: user.longitude
+                                }
+                            }, function(err) {
+                                if (err) console.log("GCM", err);
+                            });
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         res.send({ msg: "Position updated"});
     }
