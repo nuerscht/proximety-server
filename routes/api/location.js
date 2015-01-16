@@ -31,7 +31,9 @@ router.post('/', auth.token, function(req, res) {
         user.longitude = longitude;
         user.save();
 
-        models.User.find({ _id: { $in: user.friends } }, '_id name email latitude longitude clientIDs', function(err, friends) {
+        models.User.find({ _id: { $in: _.pluck(user.friends.toObject(), 'user') } },
+            '_id name email latitude longitude clientIDs alarm',
+            function(err, friends) {
             if (!err) {
                 for (var i = 0; i < friends.length; i++) {
                     var friend = friends[i];

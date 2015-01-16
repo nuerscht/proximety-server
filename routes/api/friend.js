@@ -63,18 +63,16 @@ router.put('/request', auth.token, function(req, res) {
     var user = req.user;
 
     models.Request.findOne({ _id: requestId, requestee: user._id }, '_id requester')
-        .populate('requester', '_id name email latitude longitude friends alarm').exec(function(err, request) {
+        .populate('requester', '_id name email latitude longitude friends').exec(function(err, request) {
             if (err) res.status(500).end();
             else if (!request) res.status(400).send({ param: "request_id", msg: "Request with this ID not found", value: requestId });
             else {
                 var friend = request.requester;
 
-                user.friends.addToSet(friend);
-                user.alarm.addToSet(friend);
+                user.friends.push({ user: friend });
                 user.save();
 
-                friend.friends.addToSet(user);
-                friend.alarm.addToSet(user);
+                friend.friends.push({ user: user });
                 friend.save();
 
                 request.remove();
@@ -102,7 +100,7 @@ router.delete('/request', auth.token, function(req, res) {
 
 // Get all friends from my friendlist
 router.get('/', auth.token, function(req, res) {
-    var friendIds = req.user.friends;
+    var friendIds = _.pluck(req.user.friends.toObject(), 'user');
     if (friendIds && friendIds.length) {
         models.User.find({ _id: { $in: friendIds } }, '_id name email latitude longitude', function(err, friends) {
             if (err) res.status(500).end();
@@ -123,36 +121,47 @@ router.get('/:id', auth.token, function(req, res) {
     });
 });
 
-// Update the alarm settings
+// Get the alarm settings
 router.get('/:id/alarm', auth.token, function(req, res) {
     var friendId = req.params.id;
-    var user = req.user;
-    var active = user.alarm.indexOf(friendId) < 0 ? 0 : 1;
 
-    res.send({ active: active });
+    models.User.findOne({ 'friends.user': friendId }, function(err, user) {
+        if (err) res.status(500).end();
+        else if (!user) res.status(400).send({ param: 'id', msg: "Friend with this id not found", value: friendId });
+        else {
+            res.send({
+                active: user.friends[0].active,
+                distance: user.friends[0].distance
+            });
+        }
+    });
 });
 
 // Update the alarm settings
 router.put('/:id/alarm', auth.token, function(req, res) {
     req.checkBody('active', "Param active must be either 0 or 1").optional().isIn(["0", "1"]);
+    req.checkBody('distance', "Param distance must be between 1 and 100").optional().isInt();
 
     var errors = req.validationErrors();
     if (errors) res.status(400).send(errors);
     else {
         var friendId = req.params.id;
-        var user = req.user;
         var active = req.body.active == 1;
+        var distance = req.body.distance;
 
-        if (user.friends.indexOf(friendId) < 0) res.status(400).send({ param: 'id', msg: "Friend with this id not found", value: friendId });
-        else {
-            if (active) {
-                user.alarm.pull(friendId);
-            } else {
-                user.alarm.addToSet(friendId);
+        models.User.findOneAndUpdate({ 'friends.user': friendId }, { '$set': {
+            'friends.$.active': active,
+            'friends.$.distance': distance
+        }}, function(err, user) {
+            if (err) res.status(500).end();
+            else if (!user) res.status(400).send({ param: 'id', msg: "Friend with this id not found", value: friendId });
+            else {
+                res.send({
+                    active: user.friends[0].active,
+                    distance: user.friends[0].distance
+                });
             }
-
-            res.send({ active: active });
-        }
+        });
     }
 });
 
@@ -161,17 +170,17 @@ router.delete('/', auth.token, function(req, res) {
     var friendId = req.param('friend_id');
     var user = req.user;
 
-    models.User.findOne({ _id: friendId }, function(err, friend) {
+    models.User.find({
+        '_id': { $in: [ user._id, friendId ] },
+        'friends.user': { $in: [ user._id, friendId ] }
+    }, function(err, users) {
         if (err) res.status(500).end();
-        else if (!friend) res.status(400).send({ param: "request_id", msg: "Request with this ID not found", value: requestId });
+        else if (!users) res.status(400).send({ param: 'id', msg: "Friend with this id not found", value: friendId });
         else {
-            user.friends.pull(friend);
-            user.alarm.pull(friend);
-            user.save();
-
-            friend.friends.pull(user);
-            friend.alarm.pull(user);
-            friend.save();
+            for (var i in users) {
+                users[i].friends[0].remove();
+                users[i].save();
+            }
 
             res.send({ msg: "Friend removed" });
         }
